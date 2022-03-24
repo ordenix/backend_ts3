@@ -37,40 +37,40 @@ path = "icons"
 
 
 ########################################################################## REGISTER ##########################################################################
-@router.post("/register")
-async def create_user(user: schemas.User_Create_Incomong, db: Session = Depends(function.get_db)):
-    db_user = crud.get_user_by_login(db, login=user.login)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Login already registered")
-    db_user = None
-    db_user = crud.get_user_by_dbid(db, dbid=user.dbid)
-    if db_user:
-        raise HTTPException(status_code=400, detail="DBID already registered")
-    data=crud.get_user_temp_token(db,user.dbid)
-    if not data:
-        raise HTTPException(status_code=400, detail="Token was'n created")
-    if not data.token == user.token:
-        raise HTTPException(status_code=400, detail="Token is invalid")
-    else:
-        crud.create_register_user(db=db, user=user)
-        #TODO token delete
-    return {"Status": "succes"}
+# @router.post("/register")
+# async def create_user(user: schemas.User_Create_Incomong, db: Session = Depends(function.get_db)):
+#     db_user = crud.get_user_by_login(db, login=user.login)
+#     if db_user:
+#         raise HTTPException(status_code=400, detail="Login already registered")
+#     db_user = None
+#     db_user = crud.get_user_by_dbid(db, dbid=user.dbid)
+#     if db_user:
+#         raise HTTPException(status_code=400, detail="DBID already registered")
+#     data=crud.get_user_temp_token(db,user.dbid)
+#     if not data:
+#         raise HTTPException(status_code=400, detail="Token was'n created")
+#     if not data.token == user.token:
+#         raise HTTPException(status_code=400, detail="Token is invalid")
+#     else:
+#         crud.create_register_user(db=db, user=user)
+#         #TODO token delete
+#     return {"Status": "succes"}
 ########################################################################## LOGIN ##########################################################################
-@router.post("/login")
-async def login_for_token(userlogin: schemas.UserLogin,db: Session = Depends(function.get_db)):
-    user=function.auth(db,userlogin.login, userlogin.password)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password"
-        )
-    user = crud.get_user_by_login(db, userlogin.login)
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = function.create_access_token(
-     data={"UID": user.uid,"DBID": user.dbid,"Role":user.role}, expires_delta=access_token_expires)
-    crud.update_last_login(db,userlogin.login)
-    return {"token": access_token, "token_type": "bearer"}
+    # @router.post("/login")
+    # async def login_for_token(userlogin: schemas.UserLogin,db: Session = Depends(function.get_db)):
+    #     user=function.auth(db,userlogin.login, userlogin.password)
+    #
+    #     if not user:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_401_UNAUTHORIZED,
+    #             detail="Incorrect username or password"
+    #         )
+    #     user = crud.get_user_by_login(db, userlogin.login)
+    #     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    #     access_token = function.create_access_token(
+    #      data={"UID": user.uid,"DBID": user.dbid,"Role":user.role}, expires_delta=access_token_expires)
+    #     crud.update_last_login(db,userlogin.login)
+    #     return {"token": access_token, "token_type": "bearer"}
 ########################################################################## GET ICON ##########################################################################
 @router.get("/icon/{icon_id}")
 async def icon(icon_id:str):
@@ -80,11 +80,11 @@ async def icon(icon_id:str):
     else:
         return {"error" : "File not found!"}
 ########################################################################## GET IP ##########################################################################
-@router.get("/get_ip")
-def read_root(request: Request):
-    client_host = request.client.host
-    print(request.headers.get('X-Forwarded-For'))
-    return {"client_host": request.headers.get('X-Forwarded-For')}
+# @router.get("/get_ip")
+# def read_root(request: Request):
+#     client_host = request.client.host
+#     print(request.headers.get('X-Forwarded-For'))
+#     return {"client_host": request.headers.get('X-Forwarded-For')}
 
 # ######################################################################### GET IP ##########################################################################
 

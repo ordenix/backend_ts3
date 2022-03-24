@@ -241,18 +241,18 @@ def read_is_online(request: Request, db: Session = Depends(get_db)):
     ip = request.headers.get('X-Forwarded-For')
     #ip='51.83.179.240'
     return webDeamon.now_list_on_line(ip)
-@app.get("/set_temp_token/{DBID}")
-def create_temp_token(DBID: str, db: Session = Depends(get_db)):
-    data=crud.get_user_temp_token(db, DBID)
-    letters = string.ascii_letters
-    temp_token=( ''.join(random.choice(letters) for i in range(10)) )
-    credentials=schemas.Temp_Token(DBID=DBID,token=temp_token)
-    if data:
-        crud.update_user_temp_token(db,credentials)
-    else:
-        crud.create_user_temp_token(db,credentials)
-    webDeamon.send_token_to_user(DBID,temp_token)
-    return
+# @app.get("/set_temp_token/{DBID}")
+# def create_temp_token(DBID: str, db: Session = Depends(get_db)):
+#     data=crud.get_user_temp_token(db, DBID)
+#     letters = string.ascii_letters
+#     temp_token=( ''.join(random.choice(letters) for i in range(10)) )
+#     credentials=schemas.Temp_Token(DBID=DBID,token=temp_token)
+#     if data:
+#         crud.update_user_temp_token(db,credentials)
+#     else:
+#         crud.create_user_temp_token(db,credentials)
+#     webDeamon.send_token_to_user(DBID,temp_token)
+#     return
 @app.post("/register/nonaccount/")
 def login_for_token(data: schemas.Temp_Token, db: Session = Depends(get_db)):
     if verify_token(db, data.DBID, data.token):
