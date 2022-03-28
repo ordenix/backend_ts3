@@ -88,15 +88,15 @@ async def icon(icon_id:str):
 
 # ######################################################################### GET IP ##########################################################################
 
-@router.get("/rank_games_list/{group_name}")
-async def get_rank_games_list(group_name: str, db: Session = Depends(function.get_db),
-                              user: schemas.current_user = Depends(function.decode_auth_token)):
-    return crud.get_list_rank_games_by_group_name(db, group_name)
-
-@router.get("/rank_game_group_list/")
-async def get_rank_game_group_list(db: Session = Depends(function.get_db),
-                                   user: schemas.current_user = Depends(function.decode_auth_token)):
-    return crud.get_list_rank_games_name(db)
+# @router.get("/rank_games_list/{group_name}")
+# async def get_rank_games_list(group_name: str, db: Session = Depends(function.get_db),
+#                               user: schemas.current_user = Depends(function.decode_auth_token)):
+#     return crud.get_list_rank_games_by_group_name(db, group_name)
+#
+# @router.get("/rank_game_group_list/")
+# async def get_rank_game_group_list(db: Session = Depends(function.get_db),
+#                                    user: schemas.current_user = Depends(function.decode_auth_token)):
+#     return crud.get_list_rank_games_name(db)
 
 # ######################################################################### GET LAST PING PACK LOSS PING ##############
 

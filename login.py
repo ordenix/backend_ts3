@@ -1,26 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
-import os
-import string
-import random
-from sqlalchemy.orm import Session
-import crud, modelsdb, schemas
-from fastapi.responses import FileResponse
-import ts3
-import webDeamon
-from database import *
-import function
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime, timedelta
-import config
-SECRET_KEY = config.jwt['SECRET_KEY']
-ALGORITHM = config.jwt['ALGORITHM']
-ACCESS_TOKEN_EXPIRE_MINUTES = config.jwt['ACCESS_TOKEN_EXPIRE_MINUTES']
 
-router = APIRouter(
-    prefix="/login",
-    tags=["login"],
-    responses={404: {"description": "Not found"}},
-)
 unauthorized_operation_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="UNAUTHORIZED OPERATION",
@@ -28,23 +6,23 @@ unauthorized_operation_exception = HTTPException(
 
 
 # get current limit rank
-@router.get("/get_current_rank_limit/")
-async def get_rank_limit(db: Session = Depends(function.get_db),
-                         user: schemas.current_user = Depends(function.decode_auth_token)):
-    dbid = int(user[1])
-    with ts3.query.TS3Connection(config.query_ts3['host'], config.query_ts3['port']) as ts3conn:
-        ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
-        ts3conn.use(sid=1)
-        try:
-            ts3conn.clientupdate(client_nickname="Sauron TS3|WEB")
-        except:
-            pass
-        limit = function.current_limit_rank_games(ts3conn, dbid, db)
-    return limit
+# @router.get("/get_current_rank_limit/")
+# async def get_rank_limit(db: Session = Depends(function.get_db),
+#                          user: schemas.current_user = Depends(function.decode_auth_token)):
+#     dbid = int(user[1])
+#     with ts3.query.TS3Connection(config.query_ts3['host'], config.query_ts3['port']) as ts3conn:
+#         ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
+#         ts3conn.use(sid=1)
+#         try:
+#             ts3conn.clientupdate(client_nickname="Sauron TS3|WEB")
+#         except:
+#             pass
+#         limit = function.current_limit_rank_games(ts3conn, dbid, db)
+#     return limit
 
 
 # return_current_rank
-@router.get("/current_rank/")
+@router.get("/current_rank/") ??????????????
 async def return_current_rank(user: schemas.current_user = Depends(function.decode_auth_token)):
     dbid = int(user[1])
     with ts3.query.TS3Connection(config.query_ts3['host'], config.query_ts3['port']) as ts3conn:
@@ -59,26 +37,26 @@ async def return_current_rank(user: schemas.current_user = Depends(function.deco
 
 
 # return current to set rank array
-@router.get("/current_to_set_array/{group_name}")
-async def return_current_to_set_array(group_name: str,
-                                      user: schemas.current_user = Depends(function.decode_auth_token),
-                                      db: Session = Depends(function.get_db)):
-    dbid = int(user[1])
-    response_db = crud.get_list_rank_games_by_group_name(db, group_name)
-    to_set_rank_list = []
-    with ts3.query.TS3Connection(config.query_ts3['host'], config.query_ts3['port']) as ts3conn:
-        ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
-        ts3conn.use(sid=1)
-        try:
-            ts3conn.clientupdate(client_nickname="Sauron TS3|WEB")
-        except:
-            pass
-        rank_list = function.return_current_rank_list(ts3conn, dbid, db)
-    for i in response_db:
-        for z in rank_list:
-            if int(z) == i.group_id:
-                to_set_rank_list.append(i.group_id)
-    return to_set_rank_list
+# @router.get("/current_to_set_array/{group_name}")
+# async def return_current_to_set_array(group_name: str,
+#                                       user: schemas.current_user = Depends(function.decode_auth_token),
+#                                       db: Session = Depends(function.get_db)):
+#     dbid = int(user[1])
+#     response_db = crud.get_list_rank_games_by_group_name(db, group_name)
+#     to_set_rank_list = []
+#     with ts3.query.TS3Connection(config.query_ts3['host'], config.query_ts3['port']) as ts3conn:
+#         ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
+#         ts3conn.use(sid=1)
+#         try:
+#             ts3conn.clientupdate(client_nickname="Sauron TS3|WEB")
+#         except:
+#             pass
+#         rank_list = function.return_current_rank_list(ts3conn, dbid, db)
+#     for i in response_db:
+#         for z in rank_list:
+#             if int(z) == i.group_id:
+#                 to_set_rank_list.append(i.group_id)
+#     return to_set_rank_list
 
 
 # set rank games
@@ -96,8 +74,8 @@ async def set_rank_games(rank_list_to_set: list,
             pass
         current_rank_list = function.return_current_rank_list(ts3conn, dbid, db)
         limit_rank = function.current_limit_rank_games(ts3conn, dbid, db)
-        if len(rank_list_to_set) > limit_rank:
-            return unauthorized_operation_exception
+        # if len(rank_list_to_set) > limit_rank:
+        #     return unauthorized_operation_exception
         all_game_rank_list = crud.return_all_rank_games(db)
         all_game_rank_list_id = []
         for i in all_game_rank_list:
