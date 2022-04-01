@@ -1,19 +1,13 @@
-import re
 from datetime import datetime, timedelta
 from typing import Optional
 import time
-from typing import List
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
-import json
 import bans
 from pydantic import BaseModel
-import random
-import string
 from typing import List
 import webDeamon
 from fastapi import Depends, FastAPI, HTTPException
@@ -27,9 +21,7 @@ import function
 import admin
 import ts3
 import config
-import login
 import influxdb_client
-from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 url = config.influx_db['url']
@@ -221,181 +213,6 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
-
-@app.get("/users/me/", response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return current_user
-@app.get("/data")
-async def data(current_user: schemas.User = Depends(get_auth_user)):
-    return {"message": "Hello World","hu": current_user.email}
-
-@app.get("/users/me/items/")
-async def read_own_items(current_user: User = Depends(get_current_active_user)):
-    return [{"item_id": "Foo", "owner": current_user.username}]
-
-
-
-############################################### Na czsto############################
-@app.get("/isonline", response_model=List[schemas.UserInfo])
-def read_is_online(request: Request, db: Session = Depends(get_db)):
-    ip = request.headers.get('X-Forwarded-For')
-    #ip='51.83.179.240'
-    return webDeamon.now_list_on_line(ip)
-# @app.get("/set_temp_token/{DBID}")
-# def create_temp_token(DBID: str, db: Session = Depends(get_db)):
-#     data=crud.get_user_temp_token(db, DBID)
-#     letters = string.ascii_letters
-#     temp_token=( ''.join(random.choice(letters) for i in range(10)) )
-#     credentials=schemas.Temp_Token(DBID=DBID,token=temp_token)
-#     if data:
-#         crud.update_user_temp_token(db,credentials)
-#     else:
-#         crud.create_user_temp_token(db,credentials)
-#     webDeamon.send_token_to_user(DBID,temp_token)
-#     return
-@app.post("/register/nonaccount/")
-def login_for_token(data: schemas.Temp_Token, db: Session = Depends(get_db)):
-    if verify_token(db, data.DBID, data.token):
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        userdata = crud.get_user_data_by_DBID(db, data.DBID)
-        ##############################################################################################ROLE HERE DEFINED  staff(only user who can acces to staff panel) guest(non register user) register (register user in panel with offline account)
-        access_token = function.create_access_token(
-            data={"UID": userdata.UID, "DBID": data.DBID, "Role": "Guest"}, expires_delta=access_token_expires)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect auth token")
-    #atoken="e"
-    #UID,DBID,Role=decode_auth_token(atoken)
-    return {"token": access_token, "token_type": "bearer"}
-@app.get("/get_siedbar/account/",response_model=List[schemas.navMenu])
-async def get_siedbar(current_user: schemas.current_user = Depends(function.decode_auth_token), db: Session = Depends(get_db)):
-    dbid = int(current_user[1])
-    user_data = crud.get_user_rank_on_ts(db, dbid)
-    nav_elements = []
-    register_not = {
-              "icon": 'fa-user-tag',
-              "route_link_name": 'userregisterrank',
-              "name": 'Rejestracja',
-              "status": 'fa-exclamation',
-              "color_status": ''
-            }
-    register = {
-              "icon": 'fa-user-tag',
-              "route_link_name": 'userregisterrank',
-              "name": 'Rejestracja',
-              "status": 'fa-check',
-              "color_status": ''
-            }
-    rank_game = {
-                "icon": 'fa-tachometer-alt',
-                "route_link_name": 'gamerank',
-                "name": 'Rangi Gier',
-                "status": '',
-                "color_status": ''
-            }
-    if current_user[2] == 'Staff':
-
-        navElements= [
-            {
-              "icon": 'fa-user-tag',
-              "route_link_name": 'userregisterrank',
-              "name": 'Rejestracja',
-              "status": 'fa-times',
-              "color_status": ''
-            },
-            {
-              "icon": 'fa-tachometer-alt',
-              "route_link_name": 'gamerank',
-              "name": 'Rangi Gier',
-              "status": '',
-              "color_status": ''
-            },
-          ]
-    elif current_user[2] == 'Guest':
-        if not user_data.is_register:
-            nav_elements.append(register_not)
-        else:
-            nav_elements.append(register)
-            nav_elements.append(rank_game)
-        return nav_elements
-    elif current_user[2] == 'Register':
-        if not user_data.is_register:
-            nav_elements.append(register_not)
-        else:
-            nav_elements.append(register)
-            nav_elements.append(rank_game)
-        return nav_elements
-    else:
-        navElements=[];
-    return navElements
-@app.get("/get_siedbar/server/",response_model=List[schemas.navMenu])
-async def get_siedbar(user: schemas.current_user=Depends(function.decode_auth_token),db: Session = Depends(get_db)):
-    navElements= []
-    if user[2]=='Staff':
-
-        register={
-              "icon": 'fa-user-tag',
-              "route_link_name": 'manageregisterrank',
-              "name": '[Rejestracja]',
-              "status": 'fa-cogs',
-              "color_status": ''
-            }
-        gamerank={
-              "icon": 'fa-dice',
-              "route_link_name": 'rankgameslist',
-              "name": '[Rangi Gier]',
-              "status": 'fa-cogs',
-              "color_status": ''
-            }
-        rank_staff={
-              "icon": 'fa-code-branch',
-              "route_link_name": 'managestaffform',
-              "name": '[Rangi ADM]',
-              "status": 'fa-cogs',
-              "color_status": ''
-            }
-        user_staff={
-              "icon": 'fa-user-tie',
-              "route_link_name": 'stafflist',
-              "name": '[Administratorzy]',
-              "status": 'fa-toolbox',
-              "color_status": ''
-            }
-        user_list={
-              "icon": 'fas fa-users',
-              "route_link_name": 'UserList',
-              "name": '[Użytkownicy]',
-              "status": 'fa-toolbox',
-              "color_status": ''
-            }
-        if crud.check_staff_grants(db,user[1],"acces_to_register"):
-            navElements.append(register)
-        if crud.check_staff_grants(db, user[1], "access_to_game_rank"):
-            navElements.append(gamerank)
-        if crud.check_staff_grants(db,user[1],"acces_to_grant_rank"):
-            navElements.append(rank_staff)
-        if crud.check_staff_grants(db,user[1],"acces_to_staff_user"):
-            navElements.append(user_staff)
-        # TODO permissions
-        navElements.append(user_list)
-
-    else:
-        navElements=[];
-    return navElements
-@app.get("/rank/")
-async def read_item(type: str = 'none', action: str = 'none', id: int = 0, rank_name: str= 'none', group_id: int = 0, path: str = 'none', db: Session = Depends(get_db),current_use: schemas.current_user=Depends(function.decode_auth_token)):
-    #akcje get add remove modify
-    if type=='rank_gender':
-        DB_NAME=modelsdb.register_rank_gender
-    elif type=='rank_province':
-        DB_NAME=modelsdb.register_rank_province
-    else:
-        return
-    data=crud.get_rank_list(db, DB_NAME)
-    return data
-
-
 @app.get("/group_name/",response_model=schemas.name_rank)
 async def get_name_rank(id: int = 0, user: schemas.current_user=Depends(function.decode_auth_token), db: Session = Depends(get_db)):
     if user[2]=='Staff':
@@ -403,77 +220,70 @@ async def get_name_rank(id: int = 0, user: schemas.current_user=Depends(function
         data.name=webDeamon.get_group_name(id)
         return data
     return
-@app.post("/get_DBID_by_uid/")
-async def get(data: schemas.uid,db: Session = Depends(get_db)):
-
-    DBID =int(webDeamon.get_DBID_by_UID(data.uid))
-    data=crud.get_user_temp_token(db, DBID)
-    letters = string.ascii_letters
-    temp_token=( ''.join(random.choice(letters) for i in range(10)) )
-    credentials=schemas.Temp_Token(DBID=DBID,token=temp_token)
-    if data:
-        crud.update_user_temp_token(db,credentials)
-    else:
-        crud.create_user_temp_token(db,credentials)
-    webDeamon.send_token_to_user(DBID,temp_token)
-    return {"DBID": DBID }
 @app.get("/status_rule_user/")
 async def get_status(db: Session = Depends(get_db), user: schemas.current_user = Depends(function.decode_auth_token)):
     #od 1 dbid
     data = schemas.staus_rules(connect=False, time=False, ban=False, rules=False, status_register=False)
-    CRR_minimum_connect = int(crud.return_settings(db, "CRR_minimum_connect"))
-    CRR_minimum_time_online = int(crud.return_settings(db, "CRR_minimum_time_online"))
+    # CRR_minimum_connect = int(crud.return_settings(db, "CRR_minimum_connect"))
+    # CRR_minimum_time_online = int(crud.return_settings(db, "CRR_minimum_time_online"))
     CRR_minimum_connect_ratio = int(crud.return_settings(db, "CRR_minimum_connect_ratio"))
     DBID = int(user[1])
     user_data = crud.get_user_rank_on_ts(db, DBID)
-    with ts3.query.TS3Connection(config.query_ts3['host'], 10011) as ts3conn:
-        ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
-        ts3conn.use(sid=1)
-        try:
-            ts3conn.clientupdate(client_nickname="Sauron TS3|WEB")
-        except:
-            pass
-        rank_list = function.return_current_rank_list(ts3conn, DBID, db)
-    register_on_ts = False
-    for rank in rank_list:
-        if crud.return_rank_by_id(db, modelsdb.register_rank_gender, rank):
-            register_on_ts = True
-    if register_on_ts and not user_data.is_register:
-        crud.accept_rules_and_register(db, DBID)
-        data.status_register = True
-        data.connect = True
-        data.time = True
-        data.ban = True
-        data.rules = True
-        return data
 
-    if user_data.is_register:
-        data.status_register = True
-        data.connect = True
-        data.time = True
-        data.ban = True
-        data.rules = True
-        return data
-    data_user = crud.get_user_data_by_DBID(db, DBID)
-    if data_user:
-        data.connect = True
-    else:
-        return data
-    timing = crud.get_user_timing(db, DBID)
+    # with ts3.query.TS3Connection(config.query_ts3['host'], 10011) as ts3conn:
+    #     ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
+    #     ts3conn.use(sid=1)
+    #     try:
+    #         ts3conn.clientupdate(client_nickname="Sauron TS3|WEB")
+    #     except:
+    #         pass
+    #     rank_list = function.return_current_rank_list(ts3conn, DBID, db)
+    # register_on_ts = False
+
+    # for rank in rank_list:
+    #     if crud.return_rank_by_id(db, modelsdb.register_rank_gender, rank):
+    #         register_on_ts = True
+
+    # if register_on_ts and not user_data.is_register:
+    #     crud.accept_rules_and_register(db, DBID)
+    #     data.status_register = True
+    #     data.connect = True
+    #     data.time = True
+    #     data.ban = True
+    #     data.rules = True
+    #     return data
+
+    # if user_data.is_register:
+    #     data.status_register = True
+    #     data.connect = True
+    #     data.time = True
+    #     data.ban = True
+    #     data.rules = True
+    #     return data
+
+
+    # data_user = crud.get_user_data_by_DBID(db, DBID)
+    # if data_user:
+    #     data.connect = True
+    # else:
+    #     return data
+    # timing = crud.get_user_timing(db, DBID)
+
     try:
-        if timing.TIME_ONLINE < CRR_minimum_time_online:
-            return data
-        total_afk_time = timing.TIME_AWAY+timing.TIME_MIC_DISABLED+timing.TIME_IDLE
-        ratio = total_afk_time/timing.TIME_TOTAL
-        CRR_minimum_connect_ratio = 1-(CRR_minimum_connect_ratio*0.01)
-        real_connection = crud.get_base_users_info_on_teamsepak(db, DBID).real_total_connections
-        if ratio > CRR_minimum_connect_ratio:
-            return data
-        else:
-            if real_connection > CRR_minimum_connect:
-                data.time = True
-            else:
-                return data
+        # if timing.TIME_ONLINE < CRR_minimum_time_online:
+        #     return data
+
+        # total_afk_time = timing.TIME_AWAY+timing.TIME_MIC_DISABLED+timing.TIME_IDLE
+        # ratio = total_afk_time/timing.TIME_TOTAL
+        # CRR_minimum_connect_ratio = 1-(CRR_minimum_connect_ratio*0.01)
+        # real_connection = crud.get_base_users_info_on_teamsepak(db, DBID).real_total_connections
+        # if ratio > CRR_minimum_connect_ratio:
+        #     return data
+        # else:
+            # if real_connection > CRR_minimum_connect:
+            #     data.time = True
+            # else:
+            #     return data
         current_time = int(time.time())
         ban_history = crud.get_ban_last_history_by_user_dbid(db, DBID, current_time - (int(crud.return_settings(db, "CRR_hour_no_ban")) * 3600))
         if len(ban_history) == 0:
@@ -481,6 +291,7 @@ async def get_status(db: Session = Depends(get_db), user: schemas.current_user =
 
         if user_data.check_rules == True:
             data.rules = True
+
     except: pass
     return data
 ##################################################################################### PRZXELICZ NA NOWO PUTA!

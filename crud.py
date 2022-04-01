@@ -678,9 +678,9 @@ def update_ban_history_table(db: Session, data: schemas.BanHistoryData):
 
 def get_ban_last_history_by_user_dbid(db: Session, user_dbid: int, time: int):
     ban_user = aliased(modelsdb.base_users_on_teamsepak, name="ban_user")
-    add_admin = aliased(modelsdb.base_users_on_teamsepak, name="add_admin")
-    commit_admin = aliased(modelsdb.base_users_on_teamsepak, name="commit_admin")
-    removed_admin = aliased(modelsdb.base_users_on_teamsepak, name="removed_admin")
+    add_admin = aliased(modelsdb.base_users_on_teamsepak, name="add_admin") #
+    commit_admin = aliased(modelsdb.base_users_on_teamsepak, name="commit_admin") #
+    removed_admin = aliased(modelsdb.base_users_on_teamsepak, name="removed_admin") #
     return db.query(modelsdb.BanHistoryTable, ban_user, add_admin, commit_admin, removed_admin, modelsdb.BanTable, modelsdb.ActionBanType).\
         outerjoin(ban_user, modelsdb.BanHistoryTable.ban_client_dbid == ban_user.DBID).\
         outerjoin(add_admin, modelsdb.BanHistoryTable.add_admin_dbid == add_admin.DBID).\
