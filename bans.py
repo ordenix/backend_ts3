@@ -259,18 +259,18 @@ async def add_ban(data: schemas.DataToAddBan,
                   db: Session = Depends(function.get_db)):
     if not user[2] == "Staff":
         raise credentials_exception
-    reached_day_limit = HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="Reached day limit"
-    )
-    reached_10m_limit = HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="Reached 10m limit"
-    )
-    overflow = HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="Overflow error"
-    )
+    # reached_day_limit = HTTPException(
+    #     status_code=status.HTTP_409_CONFLICT,
+    #     detail="Reached day limit"
+    # )
+    # reached_10m_limit = HTTPException(
+    #     status_code=status.HTTP_409_CONFLICT,
+    #     detail="Reached 10m limit"
+    # )
+    # overflow = HTTPException(
+    #     status_code=status.HTTP_409_CONFLICT,
+    #     detail="Overflow error"
+    # )
     user_is_admin = HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail="You can't add ban to admin"
@@ -283,68 +283,75 @@ async def add_ban(data: schemas.DataToAddBan,
         status_code=status.HTTP_200_OK,
         detail="User is offline"
     )
+
+
     offline_user = False
     current_time = int(time.time())
     action = crud.get_ban_action_type_by_id(db, data.action_id)
     creator_data = crud.get_user_data_by_DBID(db, user[1])
     ban_ts3_time = 0
     ban_user_data = crud.get_user_data_by_DBID(db, data.ban_client_dbid)
-    ban_permission = crud.get_ban_permissions_by_grant_rank_by_action_id(db,
-                                                                         crud.check_role_to_staff(db, user[1]).rank_id,
-                                                                         data.action_id)
+    # ban_permission = crud.get_ban_permissions_by_grant_rank_by_action_id(db,
+    #                                                                      crud.check_role_to_staff(db, user[1]).rank_id,
+    #                                                                      data.action_id)
     ban = schemas.BanHistoryData(id=0, ban_client_dbid=0, ban_id=0, action_id=0, additional_info='',
                                  add_admin_dbid=0, time_add=0, time_to=0, active=False, time_to_overflow=0,
                                  to_commit=False, commit=False, commit_admin_dbid=0, time_commit=0, auto_ban=False,
                                  removed=False, removed_dbid=0, time_removed=0)
-    history_creator = crud.get_ban_history_by_creator_id_and_action_id(db, user[1], data.action_id)
-    times_per_10m = 0
-    times_per_1d = 0
-    for element in history_creator:
-        if element.BanHistoryTable.time_add >= (current_time-600):
-            times_per_10m += 1
-        if element.BanHistoryTable.time_add >= (current_time-86400):
-            times_per_1d += 1
-    if ban_permission.limit_per_10m < times_per_10m and not ban_permission.limit_per_10m == -1:
-        raise reached_10m_limit
-    if ban_permission.limit_per_1d < times_per_1d and not ban_permission.limit_per_1d == -1:
-        raise reached_day_limit
 
-    ban.ban_client_dbid = data.ban_client_dbid
-    ban.ban_id = data.ban_id
-    ban.action_id = data.action_id
-    ban.additional_info = data.additional_info
-    ban.add_admin_dbid = user[1]
-    ban.time_add = current_time
-    if data.time == 0:
-        ban.time_to = 0
-        ban.removed = True
-        ban.active = False
-    elif data.time == -1:
-        if not ban_permission.max_time_to_action == -1:
-            if ban_permission.overflow:
-                ban.time_to = current_time + (ban_permission.max_time_to_action * 60)
-                ban_ts3_time = ban_permission.max_time_to_action * 60
-                ban.to_commit = True
-                ban.active = True
-                ban.time_to_overflow = -1
-            else:
-                raise overflow
-        else:
-            ban.time_to = -1
-    else:
-        if data.time > ban_permission.max_time_to_action and not ban_permission.max_time_to_action == -1:
-            if ban_permission.overflow:
-                ban.time_to = current_time + (ban_permission.max_time_to_action * 60)
-                ban_ts3_time = ban_permission.max_time_to_action * 60
-                ban.to_commit = True
-                ban.active = True
-                ban.time_to_overflow = (data.time - ban_permission.max_time_to_action) * 60
-            else:
-                raise overflow
-        else:
-            ban.time_to = current_time + (data.time * 60)
-            ban_ts3_time = data.time * 60
-            ban.active = True
+    # history_creator = crud.get_ban_history_by_creator_id_and_action_id(db, user[1], data.action_id)
+    # times_per_10m = 0
+    # times_per_1d = 0
+
+    # for element in history_creator:
+    #     if element.BanHistoryTable.time_add >= (current_time-600):
+    #         times_per_10m += 1
+    #     if element.BanHistoryTable.time_add >= (current_time-86400):
+    #         times_per_1d += 1
+    #
+    # if ban_permission.limit_per_10m < times_per_10m and not ban_permission.limit_per_10m == -1:
+    #     raise reached_10m_limit
+    #
+    # if ban_permission.limit_per_1d < times_per_1d and not ban_permission.limit_per_1d == -1:
+    #     raise reached_day_limit
+
+    # ban.ban_client_dbid = data.ban_client_dbid
+    # ban.ban_id = data.ban_id
+    # ban.action_id = data.action_id
+    # ban.additional_info = data.additional_info
+    # ban.add_admin_dbid = user[1]
+    # ban.time_add = current_time
+
+    # if data.time == 0:
+    #     # ban.time_to = 0
+    #     # ban.removed = True
+    #     # ban.active = False
+    # elif data.time == -1:
+    #     if not ban_permission.max_time_to_action == -1:
+    #         if ban_permission.overflow:
+    #             ban.time_to = current_time + (ban_permission.max_time_to_action * 60)
+    #             ban_ts3_time = ban_permission.max_time_to_action * 60
+    #             ban.to_commit = True
+    #             ban.active = True
+    #             ban.time_to_overflow = -1
+    #         else:
+    #             raise overflow
+    #     else:
+    #         ban.time_to = -1
+    # else:
+    #     if data.time > ban_permission.max_time_to_action and not ban_permission.max_time_to_action == -1:
+    #         if ban_permission.overflow:
+    #             ban.time_to = current_time + (ban_permission.max_time_to_action * 60)
+    #             ban_ts3_time = ban_permission.max_time_to_action * 60
+    #             ban.to_commit = True
+    #             ban.active = True
+    #             ban.time_to_overflow = (data.time - ban_permission.max_time_to_action) * 60
+    #         else:
+    #             raise overflow
+    #     else:
+    #         ban.time_to = current_time + (data.time * 60)
+    #         ban_ts3_time = data.time * 60
+    #         ban.active = True
 
     with ts3.query.TS3Connection(config.query_ts3['host'], 10011) as ts3conn:
         ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
