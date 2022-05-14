@@ -1,15 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import crud
 import ts3
-import modelsdb
 import schemas
 from database import *
 import function
-import config
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
-from typing import List
 import time
 
 SECRET_KEY = config.jwt['SECRET_KEY']
@@ -28,229 +24,228 @@ router = APIRouter(
 )
 
 
-@router.put("/put_data_ban_action_type/")
-async def put_data_ban_action_type(data: schemas.PayloadActionBanType,
-                                   user: schemas.current_user = Depends(function.decode_auth_token),
-                                   db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.put_data_ban_action_type(db, data)
-    return
+# @router.put("/put_data_ban_action_type/")
+# async def put_data_ban_action_type(data: schemas.PayloadActionBanType,
+#                                    user: schemas.current_user = Depends(function.decode_auth_token),
+#                                    db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.put_data_ban_action_type(db, data)
+#     return
+#
+#
+# @router.delete("/delete_ban_action_type/")
+# async def delete_ban_action_type(data: schemas.PayloadActionBanType,
+#                                  user: schemas.current_user = Depends(function.decode_auth_token),
+#                                  db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.delete_ban_action_type(db, data)
+#     return
+
+#
+# @router.get("/get_ban_action_type/")
+# async def get_ban_action_type(user: schemas.current_user = Depends(function.decode_auth_token),
+#                               db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     return crud.get_ban_action_type(db)
 
 
-@router.delete("/delete_ban_action_type/")
-async def delete_ban_action_type(data: schemas.PayloadActionBanType,
-                                 user: schemas.current_user = Depends(function.decode_auth_token),
-                                 db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.delete_ban_action_type(db, data)
-    return
+# @router.get("/get_current_settings/", response_model=schemas.SettingsToBanModule)
+# async def get_current_settings(user: schemas.current_user = Depends(function.decode_auth_token),
+#                                db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     response = schemas.SettingsToBanModule(active=False, auto_ban=False, two_factor=False)
+#     active = crud.return_module_settings(db, 'ban_active')
+#     auto_ban = crud.return_module_settings(db, 'ban_auto_ban')
+#     two_factor = crud.return_module_settings(db, 'ban_two_factor')
+#     if active is None:
+#         crud.update_settings(db, 'ban_active', False)
+#     else:
+#         response.active = active.status
+#     if auto_ban is None:
+#         crud.update_settings(db, 'ban_auto_ban', False)
+#     else:
+#         response.auto_ban = auto_ban.status
+#     if two_factor is None:
+#         crud.update_settings(db, 'ban_two_factor', False)
+#     else:
+#         response.two_factor = two_factor.status
+#     return response
 
 
-@router.get("/get_ban_action_type/")
-async def get_ban_action_type(user: schemas.current_user = Depends(function.decode_auth_token),
-                              db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    return crud.get_ban_action_type(db)
+# @router.put("/update_settings/")
+# async def update_settings(data: schemas.SettingsToBanModule,
+#                           user: schemas.current_user = Depends(function.decode_auth_token),
+#                           db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.update_settings(db, 'ban_active', data.active)
+#     crud.update_settings(db, 'ban_auto_ban', data.auto_ban)
+#     crud.update_settings(db, 'ban_two_factor', data.two_factor)
+#     return
 
 
-@router.get("/get_current_settings/", response_model=schemas.SettingsToBanModule)
-async def get_current_settings(user: schemas.current_user = Depends(function.decode_auth_token),
-                               db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    response = schemas.SettingsToBanModule(active=False, auto_ban=False, two_factor=False)
-    active = crud.return_module_settings(db, 'ban_active')
-    auto_ban = crud.return_module_settings(db, 'ban_auto_ban')
-    two_factor = crud.return_module_settings(db, 'ban_two_factor')
-    if active is None:
-        crud.update_settings(db, 'ban_active', False)
-    else:
-        response.active = active.status
-    if auto_ban is None:
-        crud.update_settings(db, 'ban_auto_ban', False)
-    else:
-        response.auto_ban = auto_ban.status
-    if two_factor is None:
-        crud.update_settings(db, 'ban_two_factor', False)
-    else:
-        response.two_factor = two_factor.status
-    return response
+# @router.put("/update_permissions/")
+# async def update_permissions(data: schemas.BanPermissions,
+#                              user: schemas.current_user = Depends(function.decode_auth_token),
+#                              db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.update_ban_permissions(db, data)
+#     return
+
+# @router.get("/get_permissions/{rank_id}")
+# async def get_permissions(rank_id: int,
+#                           user: schemas.current_user = Depends(function.decode_auth_token),
+#                           db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     table_permissions_data = crud.get_ban_permissions(db)
+#     ban_actions = crud.get_ban_action_type(db)
+#     grant_ranks = crud.get_staff_rank(db)
+#     # remove old
+#     if table_permissions_data:
+#         table_data_full = crud.get_ban_permissions_simple(db)
+#         for element in table_data_full:
+#             status_find = False
+#             for element_table_permissions in table_permissions_data:
+#                 if element.rank_grant_id ==
+#                 element_table_permissions.grant_rank.rank_id and element.action_ban_id == element_table_permissions.ActionBanType.id:
+#                     status_find = True
+#             if not status_find:
+#                 crud.delete_ban_permissions(db, element)
+#         # adding new items
+#         for element_grant_ranks in grant_ranks:
+#             for element_ban in ban_actions:
+#                 status_find = False
+#                 data = schemas.BanPermissions(id=0, rank_grant_id=element_grant_ranks.rank_id,
+#                                               action_ban_id=element_ban.id, max_time_to_action=-1,
+#                                               two_factor_auth=False, add=False, limit_per_10m=0,  limit_per_1d=0,
+#                                               overflow=False, commit=False, commit_auto=False, delete=False)
+#
+#                 for element_table_permissions in table_permissions_data:
+#                     if element_table_permissions.grant_rank.rank_id ==
+#                     element_grant_ranks.rank_id and element_table_permissions.ActionBanType.id == element_ban.id:
+#                         status_find = True
+#                         break
+#                 if not status_find:
+#                     crud.update_ban_permissions(db, data)
+#     else:
+#         for element_grant_ranks in grant_ranks:
+#             for element_ban in ban_actions:
+#                 data = schemas.BanPermissions(id=0, rank_grant_id=element_grant_ranks.rank_id,
+#                                               action_ban_id=element_ban.id, max_time_to_action=-1,
+#                                               two_factor_auth=False, add=False, limit_per_10m=0, overflow=False,
+#                                               limit_per_1d=0, commit=False, commit_auto=False, delete=False)
+#                 crud.update_ban_permissions(db, data)
+#     return crud.get_ban_permissions_by_group_rank_id(db, rank_id)
 
 
-@router.put("/update_settings/")
-async def update_settings(data: schemas.SettingsToBanModule,
-                          user: schemas.current_user = Depends(function.decode_auth_token),
-                          db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.update_settings(db, 'ban_active', data.active)
-    crud.update_settings(db, 'ban_auto_ban', data.auto_ban)
-    crud.update_settings(db, 'ban_two_factor', data.two_factor)
-    return
+# @router.get("/get_ban_table/")
+# async def get_ban_table(user: schemas.current_user = Depends(function.decode_auth_token),
+#                         db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     return crud.get_ban_table(db)
 
 
-@router.put("/update_permissions/")
-async def update_permissions(data: schemas.BanPermissions,
-                             user: schemas.current_user = Depends(function.decode_auth_token),
-                             db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.update_ban_permissions(db, data)
-    return
-
-@router.get("/get_permissions/{rank_id}")
-async def get_permissions(rank_id: int,
-                          user: schemas.current_user = Depends(function.decode_auth_token),
-                          db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    table_permissions_data = crud.get_ban_permissions(db)
-    ban_actions = crud.get_ban_action_type(db)
-    grant_ranks = crud.get_staff_rank(db)
-    # remove old
-    if table_permissions_data:
-        table_data_full = crud.get_ban_permissions_simple(db)
-        for element in table_data_full:
-            status_find = False
-            for element_table_permissions in table_permissions_data:
-                if element.rank_grant_id == element_table_permissions.grant_rank.rank_id and element.action_ban_id == element_table_permissions.ActionBanType.id:
-                    status_find = True
-            if not status_find:
-                crud.delete_ban_permissions(db, element)
-        # adding new items
-        for element_grant_ranks in grant_ranks:
-            for element_ban in ban_actions:
-                status_find = False
-                data = schemas.BanPermissions(id=0, rank_grant_id=element_grant_ranks.rank_id,
-                                              action_ban_id=element_ban.id, max_time_to_action=-1,
-                                              two_factor_auth=False, add=False, limit_per_10m=0,  limit_per_1d=0,
-                                              overflow=False, commit=False, commit_auto=False, delete=False)
-
-                for element_table_permissions in table_permissions_data:
-                    if element_table_permissions.grant_rank.rank_id == element_grant_ranks.rank_id and element_table_permissions.ActionBanType.id == element_ban.id:
-                        status_find = True
-                        break
-                if not status_find:
-                    crud.update_ban_permissions(db, data)
-    else:
-        for element_grant_ranks in grant_ranks:
-            for element_ban in ban_actions:
-                data = schemas.BanPermissions(id=0, rank_grant_id=element_grant_ranks.rank_id,
-                                              action_ban_id=element_ban.id, max_time_to_action=-1,
-                                              two_factor_auth=False, add=False, limit_per_10m=0, overflow=False,
-                                              limit_per_1d=0, commit=False, commit_auto=False, delete=False)
-                crud.update_ban_permissions(db, data)
-    return crud.get_ban_permissions_by_group_rank_id(db, rank_id)
+# @router.put("/put_ban_table/")
+# async def put_ban_table(data: schemas.BanTableData,
+#                         user: schemas.current_user = Depends(function.decode_auth_token),
+#                         db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.update_ban_table(db, data)
+#     return
+#
+#
+# @router.delete("/delete_ban_table/")
+# async def delete_ban_table(data: schemas.BanTableData,
+#                            user: schemas.current_user = Depends(function.decode_auth_token),
+#                            db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.delete_ban_table(db, data)
+#     return
 
 
-@router.get("/get_ban_table/")
-async def get_ban_table(user: schemas.current_user = Depends(function.decode_auth_token),
-                        db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    return crud.get_ban_table(db)
+# @router.get("/get_ban_times_by_ban_id/{ban_id}")
+# async def get_ban_times_by_ban_id(ban_id: int,
+#                                   user: schemas.current_user = Depends(function.decode_auth_token),
+#                                   db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     return crud.get_ban_times_by_ban_id(db, ban_id)
+#
+#
+# @router.put("/put_ban_times_by_ban_id/")
+# async def put_ban_times_by_ban_id(data: schemas.BanTimesData,
+#                                   user: schemas.current_user = Depends(function.decode_auth_token),
+#                                   db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.update_ban_times(db, data)
+#     return
+#
+#
+# @router.delete("/delete_ban_times_by_ban_id/")
+# async def delete_ban_times_by_ban_id(data: schemas.BanTimesData,
+#                                      user: schemas.current_user = Depends(function.decode_auth_token),
+#                                      db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     crud.delete_ban_times(db, data)
+#     return
+#
 
-
-@router.put("/put_ban_table/")
-async def put_ban_table(data: schemas.BanTableData,
-                        user: schemas.current_user = Depends(function.decode_auth_token),
-                        db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.update_ban_table(db, data)
-    return
-
-
-@router.delete("/delete_ban_table/")
-async def delete_ban_table(data: schemas.BanTableData,
-                           user: schemas.current_user = Depends(function.decode_auth_token),
-                           db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.delete_ban_table(db, data)
-    return
-
-
-@router.get("/get_ban_times_by_ban_id/{ban_id}")
-async def get_ban_times_by_ban_id(ban_id: int,
-                                  user: schemas.current_user = Depends(function.decode_auth_token),
-                                  db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    return crud.get_ban_times_by_ban_id(db, ban_id)
-
-
-@router.put("/put_ban_times_by_ban_id/")
-async def put_ban_times_by_ban_id(data: schemas.BanTimesData,
-                                  user: schemas.current_user = Depends(function.decode_auth_token),
-                                  db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.update_ban_times(db, data)
-    return
-
-
-@router.delete("/delete_ban_times_by_ban_id/")
-async def delete_ban_times_by_ban_id(data: schemas.BanTimesData,
-                                     user: schemas.current_user = Depends(function.decode_auth_token),
-                                     db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    crud.delete_ban_times(db, data)
-    return
-
-
-@router.get("/get_ban_history/")
-async def get_ban_history(
-                                  db: Session = Depends(function.get_db)):
-    return crud.get_ban_history(db)
-
-
-@router.put("/get_ban_add_parameters_to_add/")
-async def put_ban_add_parameters_to_add(data: schemas.BanTimeParameterToCalculateAdd,
-                                        user: schemas.current_user = Depends(function.decode_auth_token),
-                                        db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    response = schemas.BanTimeParameterToAdd(time_from=0, time_to=0, times_this=0, times_all=0, action_name='',
-                                             action_id=0, time_from_setting='', time_to_setting='', timing=False,
-                                             ignore_ban=False)
-    response.times_all = len(crud.get_ban_history_by_user_dbid(db, data.dbid))
-    response.times_this = len(crud.get_ban_history_by_user_dbid_ban_id(db, data.dbid, data.ban_id))
-    ban_action_times_table = crud.get_ban_times_by_ban_id(db, data.ban_id)
-    response.ignore_ban = False
-    if data.dbid == 2:
-        response.ignore_ban = True
-    # TODO SKIP parameters rank
-    if ban_action_times_table:
-        for element in ban_action_times_table:
-            if element.times_from <= response.times_this and (element.times_to >= response.times_this):
-                response.action_id = element.action_id
-                response.time_from = element.time_from
-                response.time_from_setting = element.time_from_setting
-                response.time_to = element.time_to
-                response.time_to_setting = element.time_to_setting
-            if element.times_from <= response.times_this and (element.times_to == -1):
-                response.action_id = element.action_id
-                response.time_from = element.time_from
-                response.time_from_setting = element.time_from_setting
-                response.time_to = element.time_to
-                response.time_to_setting = element.time_to_setting
-        response.action_name = crud.get_ban_action_type_by_id(db, response.action_id).name
-        response.timing = crud.get_ban_action_type_by_id(db, response.action_id).time
-    return response
-
-
-@router.put("/get_action_permission/")
-async def get_action_permission(data: schemas.DataActionPermissions,
-                                user: schemas.current_user = Depends(function.decode_auth_token),
-                                db: Session = Depends(function.get_db)):
-    if not user[2] == "Staff":
-        raise credentials_exception
-    return crud.get_ban_permissions_by_grant_rank_by_action_id(db, crud.check_role_to_staff(db, user[1]).rank_id, data.action_id)
+# @router.get("/get_ban_history/")
+# async def get_ban_history(
+#                                   db: Session = Depends(function.get_db)):
+#     return crud.get_ban_history(db)
+#
+#
+# @router.put("/get_ban_add_parameters_to_add/")
+# async def put_ban_add_parameters_to_add(data: schemas.BanTimeParameterToCalculateAdd,
+#                                         user: schemas.current_user = Depends(function.decode_auth_token),
+#                                         db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     response = schemas.BanTimeParameterToAdd(time_from=0, time_to=0, times_this=0, times_all=0, action_name='',
+#                                              action_id=0, time_from_setting='', time_to_setting='', timing=False,
+#                                              ignore_ban=False)
+#     # response.times_all = len(crud.get_ban_history_by_user_dbid(db, data.dbid))
+#     # response.times_this = len(crud.get_ban_history_by_user_dbid_ban_id(db, data.dbid, data.ban_id))
+#     ban_action_times_table = crud.get_ban_times_by_ban_id(db, data.ban_id)
+#     # response.ignore_ban = False
+#     # if data.dbid == 2:
+#     #     response.ignore_ban = True
+#     if ban_action_times_table:
+#         for element in ban_action_times_table:
+#             if element.times_from <= response.times_this and (element.times_to >= response.times_this):
+#                 response.action_id = element.action_id
+#                 response.time_from = element.time_from
+#                 response.time_from_setting = element.time_from_setting
+#                 response.time_to = element.time_to
+#                 response.time_to_setting = element.time_to_setting
+#             if element.times_from <= response.times_this and (element.times_to == -1):
+#                 response.action_id = element.action_id
+#                 response.time_from = element.time_from
+#                 response.time_from_setting = element.time_from_setting
+#                 response.time_to = element.time_to
+#                 response.time_to_setting = element.time_to_setting
+#         response.action_name = crud.get_ban_action_type_by_id(db, response.action_id).name
+#         response.timing = crud.get_ban_action_type_by_id(db, response.action_id).time
+#     return response
+# @router.put("/get_action_permission/")
+# async def get_action_permission(data: schemas.DataActionPermissions,
+#                                 user: schemas.current_user = Depends(function.decode_auth_token),
+#                                 db: Session = Depends(function.get_db)):
+#     if not user[2] == "Staff":
+#         raise credentials_exception
+#     return crud.get_ban_permissions_by_grant_rank_by_action_id(db, crud.check_role_to_staff(db, user[1]).rank_id, data.action_id)
 
 
 @router.put("/add_ban/")
@@ -354,12 +349,12 @@ async def add_ban(data: schemas.DataToAddBan,
     #         ban.active = True
 
     with ts3.query.TS3Connection(config.query_ts3['host'], 10011) as ts3conn:
-        ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
-        ts3conn.use(sid=1)
-        try:
-            ts3conn.clientupdate(client_nickname="Sauron TS3|Boska ręka")
-        except:
-            pass
+        # ts3conn.login(client_login_name=config.query_ts3['login'], client_login_password=config.query_ts3['pass'])
+        # ts3conn.use(sid=1)
+        # try:
+        #     ts3conn.clientupdate(client_nickname="Sauron TS3|Boska ręka")
+        # except:
+        #     pass
         try:
             user_info = ts3conn.clientdbinfo(cldbid=data.ban_client_dbid)
             clid = ts3conn.clientgetids(cluid=user_info[0]['client_unique_identifier'])
@@ -368,6 +363,7 @@ async def add_ban(data: schemas.DataToAddBan,
 
             client_info = ts3conn.clientinfo(clid=clid)
             list_server_group = list(client_info[0]['client_servergroups'].split(","))
+
             for group in list_server_group:
                 if int(group) == 109:
                     raise user_is_admin
